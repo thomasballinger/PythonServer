@@ -30,14 +30,18 @@ class HTTPMessage(object):
 class HTTPServer(object):
     def __init__(self, handlers):
         self.handlers = handlers
+        self.setup()
 
     def handle_msg(self, msg):
+        """returns header and body (if applicable) for given request"""
         http_msg = HTTPMessage(msg)
         response_body = ""
         if http_msg.method in self.handlers:
             status_code, response_body = self.handlers[http_msg.method](http_msg.resource)
+        elif http_msg.method in server_constants.METHODS:
+            status_code = 501 #Is okay request but not implemented
         else:
-            pass #handle undefined method
+            status_code = 400 #Not a supported method
         response_header = construct_header(http_msg.version, status_code)
         return response_header, response_body
 

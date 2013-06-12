@@ -40,3 +40,14 @@ REASON_PHRASES = {
 504 : "Gateway Time-out",
 505 : "HTTP Version not supported"
 }
+
+METHODS = [
+    "OPTIONS",
+    "GET",
+    "HEAD",
+    "POST",
+    "PUT",
+    "DELETE",
+    "TRACE",
+    "CONNECT"
+]

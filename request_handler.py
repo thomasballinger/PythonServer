@@ -10,15 +10,20 @@ def main():
     }
     server.HTTPServer(handlers)
 
-def get_get(resource):
+def parse_route(route):
+    """take in web route and returns appropriate route to resource"""
+    if route == '/':
+        route = '/index.html'
+    return '.' + route
+
+
+def get_get(route):
     """handles get request - returns appropriate data and response code"""
     response_status_code = 200
     response_body = ""
-    resource = '.' + resource
-    if resource == './':
-        resource = './index.html'
+    resource_path = parse_route(route)
     try:
-        f = open(resource)
+        f = open(resource_path)
         response_body = f.read()
     except Exception as e:
         print e
@@ -26,8 +31,17 @@ def get_get(resource):
     return response_status_code, response_body
 
 
-def get_head(resource):
-    pass
+def get_head(route):
+    """returns response code"""
+    response_status_code = 200
+    resource_path = parse_route(route)
+    response_body = ""
+    try:
+        open(resource_path)
+    except IOError:
+        response_status_code = 404
+    return response_status_code, response_body
+
 
 def get_options():
     pass
