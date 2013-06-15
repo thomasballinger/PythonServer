@@ -14,6 +14,8 @@ def parse_route(route):
     """take in web route and returns appropriate route to resource"""
     if route == '/':
         route = '/index.html'
+    while '../' in route:
+        route = route.replace('../', '')
     return '.' + route
 
 
