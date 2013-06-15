@@ -19,8 +19,7 @@ class ResponseHeader(object):
     def __repr__(self):
         return "<ResponseHeader: %s>" % self
 
-
-class HTTPMessage(object):
+class HTTPRequest(object):
     def __init__(self, msg):
         self.orig_msg = msg
         tokens = msg.split()
@@ -33,7 +32,7 @@ class HTTPMessage(object):
     def __str__(self):
         return self.orig_msg
     def __repr__(self):
-        return "<HTTPMessage: %r>" % self.orig_msg
+        return "<HTTPRequest: %r>" % self.orig_msg
 
 class HTTPServer(object):
     def __init__(self, handlers):
@@ -42,7 +41,7 @@ class HTTPServer(object):
 
     def handle_msg(self, msg):
         """returns header and body (if applicable) for given request"""
-        http_msg = HTTPMessage(msg)
+        http_msg = HTTPRequest(msg)
         response_body = ""
         if http_msg.method in self.handlers:
             status_code, response_body = self.handlers[http_msg.method](http_msg.resource)
