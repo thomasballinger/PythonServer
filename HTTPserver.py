@@ -86,7 +86,7 @@ class Server(object):
             outgoing_header, outgoing_body = self.handle_msg(msg)
 
             try:
-                client_socket.send(msg)
+                #client_socket.send(msg)
                 client_socket.send(outgoing_body)
             except socket.error, e:
                 print "error sending out file: ", e
