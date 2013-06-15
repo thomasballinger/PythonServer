@@ -21,8 +21,6 @@ def get_get(route):
             'Your Entry: <input type="text" name="entry">'
             '<input type="submit" value="Submit">'
             '</form>')
-    else:
-        return 404
 
 def get_post(route, request):
     print 'running post on ',repr(route)
@@ -32,8 +30,6 @@ def get_post(route, request):
         r.headers['Location'] = '/entries'
         r.headers['Method'] = 'GET'
         return r
-    else:
-        return 404
 
 def get_head(route):
     r = Response.convenience(get_get(route))

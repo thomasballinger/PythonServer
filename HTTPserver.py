@@ -18,11 +18,12 @@ class Response(object):
 
     @classmethod
     def convenience(cls, response):
-        if isinstance(response, int):
+        if response is None:
+            return cls(None, 404)
+        elif isinstance(response, int):
             return cls(None, response)
         elif not isinstance(response, cls):
-            r = cls(response, 200)
-            return r
+            return cls(response, 200)
         else:
             return response
 
