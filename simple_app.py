@@ -22,14 +22,17 @@ def get_get(route):
             '<input type="submit" value="Submit">'
             '</form>')
 
+def redirect(resource, method="GET", status=303):
+    r = Response(status_code=status)
+    r.headers['Location'] = '/entries'
+    r.headers['Method'] = method
+    return r
+
 def get_post(route, request):
     print 'running post on ',repr(route)
     if route == '/entries':
         entries.append(request.body)
-        r = Response(status_code=303)
-        r.headers['Location'] = '/entries'
-        r.headers['Method'] = 'GET'
-        return r
+        return redirect('/entries')
 
 def get_head(route):
     r = Response.convenience(get_get(route))
