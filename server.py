@@ -10,12 +10,19 @@
 import socket
 import server_constants
 
-def construct_header(http_ver, status_code):
-    """returns appropriate response header"""
-    return http_ver + ' ' + str(status_code) + ' ' + server_constants.REASON_PHRASES[status_code]
+class ResponseHeader(object):
+    def __init__(self, http_ver, status_code):
+        self.http_ver = http_ver
+        self.status_code = status_code
+    def __str__(self):
+        return self.http_ver + ' ' + str(self.status_code) + ' ' + server_constants.REASON_PHRASES[self.status_code]
+    def __repr__(self):
+        return "<ResponseHeader: %s>" % self
+
 
 class HTTPMessage(object):
     def __init__(self, msg):
+        self.orig_msg = msg
         tokens = msg.split()
         self.method, self.resource, self.version = tokens[:3]
 
@@ -23,6 +30,10 @@ class HTTPMessage(object):
         self.headers = {}
         for key, value in [line.split(': ', 1) for line in ''.join(tokens[3:]).split('\r\n')]:
             self.headers[key] = value
+    def __str__(self):
+        return self.orig_msg
+    def __repr__(self):
+        return "<HTTPMessage: %r>" % self.orig_msg
 
 class HTTPServer(object):
     def __init__(self, handlers):
@@ -39,8 +50,8 @@ class HTTPServer(object):
             status_code = 501 #Is okay request but not implemented
         else:
             status_code = 400 #Not a supported method
-        response_header = construct_header(http_msg.version, status_code)
-        return response_header, response_body
+        response_header = ResponseHeader(http_msg.version, status_code)
+        return str(response_header), str(response_body)
 
     def run(self):
         host = '' #accept requests from all interfaces
