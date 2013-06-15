@@ -12,6 +12,10 @@ import server_constants
 
 class Response(object):
     http_ver = 'HTTP/1.1'
+    default_bodies = {
+            404 : "<html>File not found</html>",
+            501 : "<html>That method's not implemented</html>"
+            }
     @classmethod
     def from_data(cls, msg):
         head, body = msg.split('\r\n\r\n', 1)
@@ -28,6 +32,12 @@ class Response(object):
                     [line.split(': ', 1) for line in head.split('\r\n')[1:] if line.strip()]}
         r = cls(body=body, status_code=status_code, **headers)
         return r
+    def _get_body(self):
+        if self._body is None and self.status_code in self.default_bodies:
+            return self.default_bodies[self.status_code]
+    def _set_body(self, body):
+        self._body = body
+    body = property(_get_body, _set_body)
     def __init__(self, body=None, status_code=200, **headers):
         self.status_code = status_code
         self.body = body
