@@ -19,7 +19,7 @@ class ResponseHeader(object):
     def __repr__(self):
         return "<ResponseHeader: %s>" % self
 
-class HTTPRequest(object):
+class Request(object):
     def __init__(self, msg):
         self.orig_msg = msg
         tokens = msg.split()
@@ -27,21 +27,21 @@ class HTTPRequest(object):
 
         #TODO: fix header parsing, not up to spec
         self.headers = {}
-        for key, value in [line.split(': ', 1) for line in ''.join(tokens[3:]).split('\r\n')]:
+        for key, value in [line.split(': ', 1) for line in msg.split('\r\n')[1:] if line.strip()]:
             self.headers[key] = value
     def __str__(self):
         return self.orig_msg
     def __repr__(self):
-        return "<HTTPRequest: %r>" % self.orig_msg
+        return "<Request: %r>" % self.orig_msg
 
-class HTTPServer(object):
+class Server(object):
     def __init__(self, handlers):
         self.handlers = handlers
         self.run()
 
     def handle_msg(self, msg):
         """returns header and body (if applicable) for given request"""
-        http_msg = HTTPRequest(msg)
+        http_msg = Request(msg)
         response_body = ""
         if http_msg.method in self.handlers:
             status_code, response_body = self.handlers[http_msg.method](http_msg.resource)

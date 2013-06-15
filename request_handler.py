@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import server
+import HTTPserver
 
 def main():
     handlers = {
@@ -8,7 +8,7 @@ def main():
         "HEAD": get_head,
         "OPTIONS": get_options
     }
-    server.HTTPServer(handlers)
+    HTTPserver.Server(handlers)
 
 def parse_route(route):
     """take in web route and returns appropriate route to resource"""
