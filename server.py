@@ -17,9 +17,7 @@ def construct_header(http_ver, status_code):
 class HTTPMessage(object):
     def __init__(self, msg):
         tokens = msg.split()
-        self.method = tokens[0]
-        self.resource = tokens[1]
-        self.version = tokens[2]
+        self.method, self.resource, self.version = tokens[:3]
 
         #TODO: fix parameter parsing, not working properly
         self.params = {}
