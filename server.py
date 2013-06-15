@@ -19,10 +19,10 @@ class HTTPMessage(object):
         tokens = msg.split()
         self.method, self.resource, self.version = tokens[:3]
 
-        #TODO: fix parameter parsing, not working properly
-        self.params = {}
-        for i in xrange(3, len(tokens), 2):
-            self.params[tokens[i]] = tokens[i+1]
+        #TODO: fix header parsing, not up to spec
+        self.headers = {}
+        for key, value in [line.split(': ', 1) for line in ''.join(tokens[3:]).split('\r\n')]:
+            self.headers[key] = value
 
 class HTTPServer(object):
     def __init__(self, handlers):
