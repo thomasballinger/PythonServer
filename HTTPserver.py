@@ -10,27 +10,62 @@
 import socket
 import server_constants
 
-class ResponseHeader(object):
-    def __init__(self, http_ver, status_code):
-        self.http_ver = http_ver
+class Response(object):
+    http_ver = 'HTTP/1.1'
+    @classmethod
+    def from_data(cls, msg):
+        head, body = msg.split('\r\n\r\n', 1)
+        if body.endswith('\r\n\r\n'):
+            body = body[:-4]
+        else:
+            body = None
+        tokens = head.split()
+        version, status_code, version = tokens[:3]
+        #TODO use version information!
+        status_code = int(status_code)
+        #TODO: fix header parsing, not up to spec
+        headers = {key: value for key, value in
+                    [line.split(': ', 1) for line in head.split('\r\n')[1:] if line.strip()]}
+        r = cls(body=body, status_code=status_code, **headers)
+        return r
+    def __init__(self, body=None, status_code=200, **headers):
         self.status_code = status_code
+        self.body = body
+        self.headers = headers
     def __str__(self):
-        return self.http_ver + ' ' + str(self.status_code) + ' ' + server_constants.REASON_PHRASES[self.status_code]
+        return '{http_ver} {status_code!s} {status_code_text}\r\n{headers_plus_RN}\r\n{body_plus_2RN}'.format(
+                    http_ver=self.http_ver,
+                    status_code=self.status_code,
+                    status_code_text=server_constants.REASON_PHRASES[self.status_code],
+                    headers_plus_RN="%s\r\n" % ('\r\n'.join("%s: %s" for k, v in self.headers.items()) if self.headers else ""),
+                    body_plus_2RN="%s\r\n\r\n" % (self.body if self.body else ""))
+
     def __repr__(self):
-        return "<ResponseHeader: %s>" % self
+        return "<Response: %s>" % self
 
 class Request(object):
-    def __init__(self, msg):
-        self.orig_msg = msg
+    @classmethod
+    def from_data(cls, msg):
         tokens = msg.split()
-        self.method, self.resource, self.version = tokens[:3]
-
+        method, resource, version = tokens[:3]
         #TODO: fix header parsing, not up to spec
-        self.headers = {}
-        for key, value in [line.split(': ', 1) for line in msg.split('\r\n')[1:] if line.strip()]:
-            self.headers[key] = value
+        headers = {key: value for key, value in
+                    [line.split(': ', 1) for line in msg.split('\r\n')[1:] if line.strip()]}
+        r = cls(resource, method=method, version=version, **headers)
+        return r
+    def __init__(self, resource, method="GET", body=None, version="HTTP/1.1", **headers):
+        self.method = method
+        self.resource = resource
+        self.version = version
+        self.body = None
+        self.headers = headers
     def __str__(self):
-        return self.orig_msg
+        return '{method} {resource} {version}\r\n{headers_plus_RN}\r\n{body_plus_2RN}'.format(
+                method=self.method,
+                resource=self.resource,
+                version=self.version,
+                headers_plus_RN="%s\r\n" % ('\r\n'.join("%s: %s" for k, v in self.headers.items()) if self.headers else ""),
+                body_plus_2RN="%s\r\n\r\n" % (self.body if self.body else ""))
     def __repr__(self):
         return "<Request: %r>" % self.orig_msg
 
@@ -40,17 +75,19 @@ class Server(object):
         self.run()
 
     def handle_msg(self, msg):
-        """returns header and body (if applicable) for given request"""
-        http_msg = Request(msg)
-        response_body = ""
-        if http_msg.method in self.handlers:
-            status_code, response_body = self.handlers[http_msg.method](http_msg.resource)
-        elif http_msg.method in server_constants.METHODS:
-            status_code = 501 #Is okay request but not implemented
+        """returns a Response object for given request"""
+        request = Request.from_data(msg)
+        if request.method in self.handlers:
+            response = self.handlers[request.method](request.resource)
+            if isinstance(response, int):
+                response = Response(None, status_code=response)
+            elif not isinstance(response, Response):
+                response = Response(response, 200)
+        elif request.method in server_constants.METHODS:
+            response = Response(status_code=501) #Is okay request but not implemented
         else:
-            status_code = 400 #Not a supported method
-        response_header = ResponseHeader(http_msg.version, status_code)
-        return str(response_header), str(response_body)
+            response = Response(status_code=400) #Not a supported method return response
+        return response
 
     def run(self):
         host = '' #accept requests from all interfaces
@@ -83,11 +120,11 @@ class Server(object):
             msg = client_socket.recv(2048)
 
             #TODO: spin off new thread
-            outgoing_header, outgoing_body = self.handle_msg(msg)
+            response = self.handle_msg(msg)
 
             try:
                 #client_socket.send(msg)
-                client_socket.send(outgoing_body)
+                client_socket.send(str(response))
             except socket.error, e:
                 print "error sending out file: ", e
             clients_served += 1

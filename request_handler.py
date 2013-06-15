@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import HTTPserver
+from HTTPserver import Response
 
 def main():
     handlers = {
@@ -21,28 +22,24 @@ def parse_route(route):
 
 def get_get(route):
     """handles get request - returns appropriate data and response code"""
-    response_status_code = 200
-    response_body = ""
     resource_path = parse_route(route)
     try:
         f = open(resource_path)
         response_body = f.read()
     except Exception as e:
         print e
-        response_status_code = 404
-    return response_status_code, response_body
+        return 404
+    return Response(response_body, 200)
 
 
 def get_head(route):
     """returns response code"""
-    response_status_code = 200
     resource_path = parse_route(route)
-    response_body = ""
     try:
         open(resource_path)
     except IOError:
-        response_status_code = 404
-    return response_status_code, response_body
+        return 404
+    return Response(resource_path, 200)
 
 
 def get_options():
